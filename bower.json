@@ -1,0 +1,22 @@
+{
+  "name": "udacity-d3-state-to-state-chart",
+  "description": "Chart displaying state-to-state migration in the United States using d3.js",
+  "main": "index.js",
+  "authors": [
+    "Tim Bradley"
+  ],
+  "license": "GPL Version 3",
+  "moduleType": [],
+  "homepage": "",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "d3": "^3.5.16",
+    "d3-legend": "^1.10.0"
+  }
+}
