@@ -50,42 +50,65 @@ var MigrationSlopeGraph = (function(){
                 .key((d) => d.Previous)
                 .rollup((d) => d3.sum(d, (b) => b.Estimate))
                 .entries(state.data)
-                .sort((a,b) => b - a);
+                .sort((a,b) => b.values - a.values);
+
+            fromStates.forEach(
+                (d, i) => d.totalBefore = d3.sum(
+                    fromStates.slice(0,i),
+                    (b) => b.values
+                )
+            );
 
             var toStates = d3.nest()
                 .key((d) => d.Current)
                 .rollup((d) => d3.sum(d, (b) => b.Estimate))
                 .entries(state.data)
-                .sort((a,b) => b - a);
+                .sort((a,b) => b.values - a.values);
+
+            toStates.forEach(
+                (d, i) => d.totalBefore = d3.sum(
+                    toStates.slice(0,i),
+                    (b) => b.values
+                )
+            );
+
 
             var migrateMax = Math.max(
-                    d3.max(fromStates, (d) => d.values),
-                    d3.max(toStates, (d) => d.values)
+                    d3.max(fromStates, (d) => d.totalBefore + d.values),
+                    d3.max(toStates, (d) => d.totalBefore + d.values)
                 );
 
             var y = d3.scale.linear()
                 .domain([0,migrateMax])
                 .range([0,state.innerHeight]);
 
+            var yOpacity = d3.scale.linear()
+                .domain([0,migrateMax])
+                .range([1,0.2]);
+
             var barWidth = state.innerWidth/15;
 
             chart.selectAll('rect.state-from')
                 .data(fromStates)
                 .enter().append('rect')
+                    .classed('state-bar', true)
                     .classed('state-from', true)
                     .attr('width', barWidth)
                     .attr('height', (d) => y(d.values))
                     .attr('x', 0)
-                    .attr('y', (d) => y(d.values));
+                    .attr('y', (d) => y(d.totalBefore))
+                    .attr('opacity', (d) => yOpacity(d.totalBefore));
 
             chart.selectAll('rect.state-to')
                 .data(toStates)
                 .enter().append('rect')
+                    .classed('state-bar', true)
                     .classed('state-to', true)
                     .attr('width', barWidth)
                     .attr('height', (d) => y(d.values))
                     .attr('x', state.innerWidth - barWidth)
-                    .attr('y', (d) => y(d.values));
+                    .attr('y', (d) => y(d.totalBefore))
+                    .attr('opacity', (d) => yOpacity(d.totalBefore));
 
             // chart.selectAll('g.chart-line')
             //     .data(state.data)
