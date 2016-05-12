@@ -110,6 +110,81 @@ var MigrationSlopeGraph = (function(){
                     .attr('y', (d) => y(d.totalBefore))
                     .attr('opacity', (d) => yOpacity(d.totalBefore));
 
+            var toStateFromBuckets = toStates.reduce((r,d) => {
+                r[d.key] = {
+                    state: d.key,
+                    total: d.value,
+                    buckets: state.data
+                        .filter((s) => s.Current === d.key)
+                        .sort((s1,s2) => s2.Estimate - s1.Estimate)
+                        .reduce((r,s) => {
+                            r.states[s.Previous] = {
+                                toState: s.Current,
+                                fromState: s.Previous,
+                                offset: d.totalBefore + r.runningTotalBefore,
+                                length: s.Estimate,
+                                error: s.Error
+                            };
+                            r.runningTotalBefore += s.Estimate;
+                            return r;
+                        }, {states:{}, runningTotalBefore:0}).states
+                };
+                return r;
+            }, {});
+
+            var fromStateToBuckets = fromStates.map((d) => ({
+                state: d.key,
+                total: d.value,
+                buckets: state.data
+                    .filter((s) => s.Previous === d.key)
+                    .reduce((r,s) => {
+                        r.states.push({
+                            toState: s.Current,
+                            fromState: s.Previous,
+                            offset: d.totalBefore + r.runningTotalBefore,
+                            length: s.Estimate,
+                            error: s.Error
+                        });
+                        r.runningTotalBefore += s.Estimate;
+                        return r;
+                    }, {states:[], runningTotalBefore:0}).states
+                    .sort((s1,s2) => s2.length - s1.length)
+            }));
+
+            var migrationLineGroup = chart.selectAll('g.stateMigrationLineGroup')
+                .data(fromStateToBuckets);
+
+            migrationLineGroup.enter().append('g')
+                .classed('stateMigrationLineGroup', true);
+
+            migrationLineGroup.selectAll('polygon.stateMigrationLine')
+                .data((d) => d.buckets)
+                .enter().append('polygon')
+                    .classed('stateMigrationLine', true)
+                    .attr('points', (d) => {
+                        var toState = toStateFromBuckets[d.toState].buckets[d.fromState];
+                        var points = [
+                            [
+                                barWidth,
+                                y(d.offset)
+                            ],
+                            [
+                                barWidth,
+                                y(d.offset + d.length)
+                            ],
+                            [
+                                state.innerWidth - barWidth,
+                                y(toState.offset + toState.length)
+                            ],
+                            [
+                                state.innerWidth - barWidth,
+                                y(toState.offset)
+                            ]
+                        ];
+                        return points.map((p) => p.join(',')).join(' ');
+                    });
+
+
             // chart.selectAll('g.chart-line')
             //     .data(state.data)
             //     .enter().append('g')
@@ -123,9 +198,14 @@ var MigrationSlopeGraph = (function(){
     return MigrationSlopeGraph;
 }());
 
-d3.csv('State_to_State_Migrations_Table_2011.csv', function(data) {
+d3.csv('State_to_State_Migrations_Table_2011.csv', function(d){
+    d.Estimate = d.Estimate === 'N/A' ? 0 : parseInt(d.Estimate);
+    d.Error = d.Error === 'N/A' ? 0 : parseInt(d.Error);
+    return d;
+}, function(data) {
     var slopeGraph = new MigrationSlopeGraph({
         svg: document.getElementById('mainChart'),
+        height:900,
         data: data
     });
     slopeGraph.createGraph();
