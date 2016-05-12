@@ -80,6 +80,10 @@ var MigrationSlopeGraph = (function(){
 
             var y = d3.scale.linear()
                 .domain([0,migrateMax])
+                .range([state.margin.top,state.margin.top + state.innerHeight]);
+
+            var heightScale = d3.scale.linear()
+                .domain([0,migrateMax])
                 .range([0,state.innerHeight]);
 
             var yOpacity = d3.scale.linear()
@@ -88,27 +92,94 @@ var MigrationSlopeGraph = (function(){
 
             var barWidth = state.innerWidth/15;
 
-            chart.selectAll('rect.state-from')
+            var fromGroup = chart.selectAll('g.state-from-group')
                 .data(fromStates)
-                .enter().append('rect')
-                    .classed('state-bar', true)
-                    .classed('state-from', true)
-                    .attr('width', barWidth)
-                    .attr('height', (d) => y(d.values))
-                    .attr('x', 0)
-                    .attr('y', (d) => y(d.totalBefore))
-                    .attr('opacity', (d) => yOpacity(d.totalBefore));
+                .enter().append('g')
+                    .classed('state-from-group', true)
+                    .on('mouseover', function(d){
+                        chart.classed('filtered', true);
+                        chart.classed('filtered-from', true);
+                        d3.selectAll('.line-from-' + d.key.replace(' ','-'))
+                            .classed('line-hover-from', true)
+                            .each(function(){
+                                this.parentNode.appendChild(this);
+                            });
+                    })
+                    .on('mouseout', function(d){
+                        chart.classed('filtered', false);
+                        chart.classed('filtered-from', false);
+                        d3.selectAll('.line-from-' + d.key.replace(' ','-'))
+                            .classed('line-hover-from', false);
+                    });
 
-            chart.selectAll('rect.state-to')
+            fromGroup.append('rect')
+                .classed('label', true)
+                .classed('label-from', true)
+                .attr('width', state.margin.left)
+                .attr('height', (d) => heightScale(d.values))
+                .attr('x', 0)
+                .attr('y', (d) => y(d.totalBefore));
+
+            fromGroup.append('text')
+                .classed('state-from-text', true)
+                .text((d) => d.key)
+                .attr('x', (d) => 0)
+                .attr('y', (d) => y(d.totalBefore))
+                .attr('dy',(d) => heightScale(d.values)/2 + 6);
+
+            fromGroup.append('rect')
+                .classed('state-bar', true)
+                .classed('state-from', true)
+                .attr('width', barWidth)
+                .attr('height', (d) => heightScale(d.values))
+                .attr('x', state.margin.left)
+                .attr('y', (d) => y(d.totalBefore))
+                .attr('opacity', (d) => yOpacity(d.totalBefore));
+
+            var toGroup = chart.selectAll('g.state-to-group')
                 .data(toStates)
-                .enter().append('rect')
-                    .classed('state-bar', true)
-                    .classed('state-to', true)
-                    .attr('width', barWidth)
-                    .attr('height', (d) => y(d.values))
-                    .attr('x', state.innerWidth - barWidth)
-                    .attr('y', (d) => y(d.totalBefore))
-                    .attr('opacity', (d) => yOpacity(d.totalBefore));
+                .enter()
+                    .append('g')
+                    .classed('state-to-group', true)
+                    .on('mouseover', function(d){
+                        chart.classed('filtered', true);
+                        chart.classed('filtered-to', true);
+                        d3.selectAll('.line-to-' + d.key.replace(' ','-'))
+                            .classed('line-hover-to', true)
+                            .each(function(){
+                                this.parentNode.appendChild(this);
+                            });
+                    })
+                    .on('mouseout', function(d){
+                        chart.classed('filtered', false);
+                        chart.classed('filtered-to', false);
+                        d3.selectAll('.line-to-' + d.key.replace(' ','-'))
+                            .classed('line-hover-to', false);
+                    });
+
+            toGroup.append('rect')
+                .classed('label', true)
+                .classed('label-to', true)
+                .attr('width', state.margin.right)
+                .attr('height', (d) => heightScale(d.values))
+                .attr('x', state.width - state.margin.right)
+                .attr('y', (d) => y(d.totalBefore));
+
+            toGroup.append('text')
+                .classed('state-to-text', true)
+                .text((d) => d.key)
+                .attr('x', (d) => state.margin.left + state.innerWidth)
+                .attr('y', (d) => y(d.totalBefore))
+                .attr('dy',(d) => heightScale(d.values)/2 + 6);
+
+            toGroup.append('rect')
+                .classed('state-bar', true)
+                .classed('state-to', true)
+                .attr('width', barWidth)
+                .attr('height', (d) => heightScale(d.values))
+                .attr('x', state.margin.left + state.innerWidth - barWidth)
+                .attr('y', (d) => y(d.totalBefore))
+                .attr('opacity', (d) => yOpacity(d.totalBefore));
 
             var toStateFromBuckets = toStates.reduce((r,d) => {
                 r[d.key] = {
@@ -151,48 +222,40 @@ var MigrationSlopeGraph = (function(){
                     .sort((s1,s2) => s2.length - s1.length)
             }));
 
-            var migrationLineGroup = chart.selectAll('g.stateMigrationLineGroup')
-                .data(fromStateToBuckets);
+            var lineData = fromStateToBuckets
+                .reduce((r,d) => {
+                    Array.prototype.push.apply(r,d.buckets);
+                    return r;
+                }, []);
 
-            migrationLineGroup.enter().append('g')
-                .classed('stateMigrationLineGroup', true);
-
-            migrationLineGroup.selectAll('polygon.stateMigrationLine')
-                .data((d) => d.buckets)
+            chart.selectAll('polygon.stateMigrationLine')
+                .data(lineData)
                 .enter().append('polygon')
-                    .classed('stateMigrationLine', true)
+                    .attr('class', (d) => {
+                        return 'stateMigrationLine line-from-' + d.fromState.replace(' ','-') + ' line-to-' + d.toState.replace(' ','-');
+                    })
                     .attr('points', (d) => {
                         var toState = toStateFromBuckets[d.toState].buckets[d.fromState];
                         var points = [
                             [
-                                barWidth,
+                                state.margin.left + barWidth,
                                 y(d.offset)
                             ],
                             [
-                                barWidth,
+                                state.margin.left + barWidth,
                                 y(d.offset + d.length)
                             ],
                             [
-                                state.innerWidth - barWidth,
+                                state.margin.left + state.innerWidth - barWidth,
                                 y(toState.offset + toState.length)
                             ],
                             [
-                                state.innerWidth - barWidth,
+                                state.margin.left + state.innerWidth - barWidth,
                                 y(toState.offset)
                             ]
                         ];
                         return points.map((p) => p.join(',')).join(' ');
                     });
-
-
-            // chart.selectAll('g.chart-line')
-            //     .data(state.data)
-            //     .enter().append('g')
-            //         .classed('chart-line', true)
-            //         .attr('x1', (d) => )
-            //         .attr('y1', (d) => )
-            //         .attr('x2', (d) => )
-            //         .attr('y2', (d) => );
         }
     }
     return MigrationSlopeGraph;
@@ -206,6 +269,13 @@ d3.csv('State_to_State_Migrations_Table_2011.csv', function(d){
     var slopeGraph = new MigrationSlopeGraph({
         svg: document.getElementById('mainChart'),
         height:900,
+        width: 900,
+        margin: {
+            top: 5,
+            right: 200,
+            bottom: 5,
+            left: 200
+        },
         data: data
     });
     slopeGraph.createGraph();
