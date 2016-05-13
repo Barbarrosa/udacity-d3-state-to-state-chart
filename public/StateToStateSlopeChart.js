@@ -38,7 +38,7 @@ var MigrationSlopeGraph = (function(){
         createGraph() {
             var state = stateMap.get(this);
 
-            var barWidth = state.innerWidth/15;
+            var barWidth = state.innerWidth/22;
 
             var svg = d3.select(state.svg);
             svg.attr('width', state.width).attr('height', state.height);
@@ -113,8 +113,15 @@ var MigrationSlopeGraph = (function(){
                         chart.classed('filtered-from', true);
                         d3.selectAll('.line-from-' + d.key.replace(' ','-'))
                             .classed('line-hover-from', true)
-                            .each(function(){
+                            .each(function(z){
                                 this.parentNode.appendChild(this);
+                                var toState = toStateFromBuckets[z.toState].buckets[z.fromState];
+                                chart.append('rect')
+                                    .classed('to-slice', true)
+                                    .attr('x', state.margin.left + state.innerWidth - barWidth)
+                                    .attr('y', y(toState.offset))
+                                    .attr('height', heightScale(toState.length))
+                                    .attr('width', barWidth);
                             });
                     })
                     .on('mouseout', function(d){
@@ -122,6 +129,7 @@ var MigrationSlopeGraph = (function(){
                         chart.classed('filtered-from', false);
                         d3.selectAll('.line-from-' + d.key.replace(' ','-'))
                             .classed('line-hover-from', false);
+                        chart.selectAll('rect.to-slice').remove();
                     });
 
             fromGroup.append('rect')
@@ -167,8 +175,14 @@ var MigrationSlopeGraph = (function(){
                         chart.classed('filtered-to', true);
                         d3.selectAll('.line-to-' + d.key.replace(' ','-'))
                             .classed('line-hover-to', true)
-                            .each(function(){
+                            .each(function(z){
                                 this.parentNode.appendChild(this);
+                                chart.append('rect')
+                                    .classed('from-slice', true)
+                                    .attr('x', state.margin.left)
+                                    .attr('y', y(z.offset))
+                                    .attr('height', heightScale(z.length))
+                                    .attr('width', barWidth);
                             });
                     })
                     .on('mouseout', function(d){
@@ -176,6 +190,7 @@ var MigrationSlopeGraph = (function(){
                         chart.classed('filtered-to', false);
                         d3.selectAll('.line-to-' + d.key.replace(' ','-'))
                             .classed('line-hover-to', false);
+                        chart.selectAll('rect.from-slice').remove();
                     });
 
             toGroup.append('rect')
