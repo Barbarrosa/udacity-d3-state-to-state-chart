@@ -220,6 +220,7 @@ var MigrationSlopeGraph = (function(){
                 total: d.value,
                 buckets: state.data
                     .filter((s) => s.Previous === d.key)
+                    .sort((s1,s2) => s2.Estimate - s1.Estimate)
                     .reduce((r,s) => {
                         r.states.push({
                             toState: s.Current,
@@ -231,7 +232,6 @@ var MigrationSlopeGraph = (function(){
                         r.runningTotalBefore += s.Estimate;
                         return r;
                     }, {states:[], runningTotalBefore:0}).states
-                    .sort((s1,s2) => s2.length - s1.length)
             }));
 
             var lineData = fromStateToBuckets
