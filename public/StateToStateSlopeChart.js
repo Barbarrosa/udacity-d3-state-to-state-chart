@@ -46,6 +46,18 @@ var MigrationSlopeGraph = (function(){
                 .attr('width', state.innerWidth)
                 .attr('height', state.innerHeight);
 
+            svg.append('text')
+                .classed('column-title', true)
+                .text('Outbound Migration')
+                .attr('x', 0)
+                .attr('y', '1em');
+
+            svg.append('text')
+                .classed('column-title', true)
+                .text('Inbound Migration')
+                .attr('x', state.margin.left + state.innerWidth)
+                .attr('y', '1em');
+
             var fromStates = d3.nest()
                 .key((d) => d.Previous)
                 .rollup((d) => d3.sum(d, (b) => b.Estimate))
@@ -271,7 +283,7 @@ d3.csv('State_to_State_Migrations_Table_2011.csv', function(d){
         height:900,
         width: 900,
         margin: {
-            top: 5,
+            top: 30,
             right: 200,
             bottom: 5,
             left: 200
