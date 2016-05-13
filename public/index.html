@@ -4,6 +4,7 @@
         <title>U.S. State-to-State Migration Estimates, 2011</title>
         <script src="./bower_components/d3/d3.min.js"></script>
         <script src="./bower_components/d3-legend/d3-legend.min.js"></script>
+        <link href='https://fonts.googleapis.com/css?family=Exo+2' rel='stylesheet' type='text/css'/>
         <style>
             .axis text {
                 font: 10px sans-serif;
@@ -17,9 +18,15 @@
                 stroke: #000;
                 shape-rendering: crispEdges;
             }
+            h1 {
+                font-family: 'Exo 2', Helvetica, sans-serif;
+                font-size: 54px;
+            }
             .chart .column-title {
                 color: #000;
-                font-size: 24px;
+                font-size: 48px;
+                font-weight: bold;
+                font-family: 'Exo 2', Helvetica, sans-serif;
             }
             .chart .state-from {
                 fill: #d62728;
@@ -46,9 +53,20 @@
                 opacity:1;
                 fill: #1f77b4;
             }
-            .chart .state-from-group:hover .state-from-text,
-            .chart .state-to-group:hover .state-to-text {
+            .chart .state-from-group .state-from-text,
+            .chart .state-to-group .state-to-text {
+                font-size:11px;
+                font-family: 'Exo 2', Helvetica, sans-serif;
+            }
+            .chart .state-from-group .state-from-text-hover,
+            .chart .state-to-group .state-to-text-hover {
+                opacity: 0;
+            }
+            .chart .state-from-group:hover .state-from-text-hover,
+            .chart .state-to-group:hover .state-to-text-hover {
+                opacity: 1;
                 font-weight: bold;
+                font-family: 'Exo 2', Helvetica, sans-serif;
             }
             .chart .label {
                 opacity: 0.2;
@@ -57,13 +75,17 @@
             .chart .filtered-to .state-to-group .label {
                 opacity: 0.15;
             }
-            .chart .filtered-from .state-from-group text,
-            .chart .filtered-to .state-to-group text {
+            .chart .filtered-from .state-from-group .state-from-text,
+            .chart .filtered-to .state-to-group .state-to-text {
                 opacity: 0.2;
             }
+            .chart .state-from-group:hover .state-from-text,
+            .chart .state-to-group:hover .state-to-text {
+                opacity: 0;
+            }
 
-            .chart .state-to-group:hover text,
-            .chart .state-from-group:hover text {
+            .chart .state-to-group:hover .state-from-text,
+            .chart .state-from-group:hover .state-to-text {
                 opacity: 1;
             }
             .chart .state-to-group:hover .label,

@@ -38,6 +38,8 @@ var MigrationSlopeGraph = (function(){
         createGraph() {
             var state = stateMap.get(this);
 
+            var barWidth = state.innerWidth/15;
+
             var svg = d3.select(state.svg);
             svg.attr('width', state.width).attr('height', state.height);
 
@@ -48,14 +50,14 @@ var MigrationSlopeGraph = (function(){
 
             svg.append('text')
                 .classed('column-title', true)
-                .text('Outbound Migration')
+                .text('Outbound')
                 .attr('x', 0)
                 .attr('y', '1em');
 
             svg.append('text')
                 .classed('column-title', true)
-                .text('Inbound Migration')
-                .attr('x', state.margin.left + state.innerWidth)
+                .text('Inbound')
+                .attr('x', state.margin.left + state.innerWidth - barWidth/2)
                 .attr('y', '1em');
 
             var fromStates = d3.nest()
@@ -102,8 +104,6 @@ var MigrationSlopeGraph = (function(){
                 .domain([0,migrateMax])
                 .range([1,0.2]);
 
-            var barWidth = state.innerWidth/15;
-
             var fromGroup = chart.selectAll('g.state-from-group')
                 .data(fromStates)
                 .enter().append('g')
@@ -132,12 +132,21 @@ var MigrationSlopeGraph = (function(){
                 .attr('x', 0)
                 .attr('y', (d) => y(d.totalBefore));
 
-            fromGroup.append('text')
+            fromGroup.filter((d) => heightScale(d.values) > 3.3).append('text')
                 .classed('state-from-text', true)
+                .style('font-size', (d) => heightScale(d.values)/1.5)
                 .text((d) => d.key)
                 .attr('x', (d) => 0)
                 .attr('y', (d) => y(d.totalBefore))
-                .attr('dy',(d) => heightScale(d.values)/2 + 6);
+                .attr('dy',(d) => heightScale(d.values)/1.5);
+
+            fromGroup.append('text')
+                .classed('state-from-text-hover', true)
+                .style('font-size', (d) => Math.max(16, heightScale(d.values)/1.5))
+                .text((d) => d.key)
+                .attr('x', (d) => 0)
+                .attr('y', (d) => y(d.totalBefore))
+                .attr('dy',(d) => heightScale(d.values)/1.5);
 
             fromGroup.append('rect')
                 .classed('state-bar', true)
@@ -177,12 +186,21 @@ var MigrationSlopeGraph = (function(){
                 .attr('x', state.width - state.margin.right)
                 .attr('y', (d) => y(d.totalBefore));
 
-            toGroup.append('text')
+            toGroup.filter((d) => heightScale(d.values) > 3.3).append('text')
                 .classed('state-to-text', true)
+                .style('font-size', (d) => heightScale(d.values)/1.5)
                 .text((d) => d.key)
                 .attr('x', (d) => state.margin.left + state.innerWidth)
                 .attr('y', (d) => y(d.totalBefore))
-                .attr('dy',(d) => heightScale(d.values)/2 + 6);
+                .attr('dy',(d) => heightScale(d.values)/1.5);
+
+            toGroup.append('text')
+                .classed('state-to-text-hover', true)
+                .style('font-size', (d) => Math.max(16, heightScale(d.values)/1.5))
+                .text((d) => d.key)
+                .attr('x', (d) => state.margin.left + state.innerWidth)
+                .attr('y', (d) => y(d.totalBefore))
+                .attr('dy',(d) => heightScale(d.values)/1.5);
 
             toGroup.append('rect')
                 .classed('state-bar', true)
@@ -283,7 +301,7 @@ d3.csv('State_to_State_Migrations_Table_2011.csv', function(d){
         height:900,
         width: 900,
         margin: {
-            top: 30,
+            top: 55,
             right: 200,
             bottom: 5,
             left: 200
