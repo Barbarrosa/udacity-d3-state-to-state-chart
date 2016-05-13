@@ -38,7 +38,7 @@ var MigrationSlopeGraph = (function(){
         createGraph() {
             var state = stateMap.get(this);
 
-            var barWidth = state.innerWidth/22;
+            var barWidth = state.innerWidth/8;
 
             var svg = d3.select(state.svg);
             svg.attr('width', state.width).attr('height', state.height);
@@ -301,6 +301,43 @@ var MigrationSlopeGraph = (function(){
                         ];
                         return points.map((p) => p.join(',')).join(' ');
                     });
+
+            var yFlipped = d3.scale.linear()
+                .domain([migrateMax,0])
+                .range([state.margin.top,state.margin.top + state.innerHeight]);
+
+            var niceFormat = d3.format('.2s');
+            var yAxis = d3.svg.axis()
+                .scale(yFlipped)
+                .orient('left')
+                .ticks(15)
+                .tickSubdivide(1)
+                .tickSize(0, 6, 0)
+                .tickFormat(niceFormat);
+
+            var leftAxisGroup = svg.append('g')
+                .classed('y-axis', true)
+                .call(yAxis);
+
+            leftAxisGroup.insert('rect', '.tick')
+                .attr('width', barWidth/1.5)
+                .attr('height', state.innerHeight)
+                .attr('transform', 'translate(' + (-leftAxisGroup.node().getBoundingClientRect().width/2) + ',0)')
+                ;
+
+            leftAxisGroup.attr('transform', 'translate(' + (state.margin.left + barWidth - barWidth/5) + ',' + state.margin.top + ')')
+
+            var rightAxisGroup = svg.append('g')
+                .classed('y-axis', true)
+                .call(yAxis);
+
+            rightAxisGroup.insert('rect', '.tick')
+                .attr('width', barWidth/1.5)
+                .attr('height', state.innerHeight)
+                .attr('transform', 'translate(' + (-rightAxisGroup.node().getBoundingClientRect().width/2) + ',0)')
+                ;
+
+            rightAxisGroup.attr('transform', 'translate(' + (state.margin.left + state.innerWidth - barWidth/5) + ',' + state.margin.top + ')')
         }
     }
     return MigrationSlopeGraph;
