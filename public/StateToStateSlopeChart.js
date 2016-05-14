@@ -153,7 +153,7 @@ var MigrationSlopeGraph = (function(){
                     .on('mouseover', function(d){
                         chart.classed('filtered', true);
                         chart.classed('filtered-from', true);
-                        d3.selectAll('.line-from-' + d.key.replace(' ','-'))
+                        d3.selectAll('.line-from-' + d.key.replace(/ /g,'-'))
                             .classed('line-hover-from', true)
                             .each(function(z){
                                 this.parentNode.appendChild(this);
@@ -169,7 +169,7 @@ var MigrationSlopeGraph = (function(){
                     .on('mouseout', function(d){
                         chart.classed('filtered', false);
                         chart.classed('filtered-from', false);
-                        d3.selectAll('.line-from-' + d.key.replace(' ','-'))
+                        d3.selectAll('.line-from-' + d.key.replace(/ /g,'-'))
                             .classed('line-hover-from', false);
                         chart.selectAll('rect.to-slice').remove();
                     });
@@ -215,7 +215,7 @@ var MigrationSlopeGraph = (function(){
                     .on('mouseover', function(d){
                         chart.classed('filtered', true);
                         chart.classed('filtered-to', true);
-                        d3.selectAll('.line-to-' + d.key.replace(' ','-'))
+                        d3.selectAll('.line-to-' + d.key.replace(/ /g,'-'))
                             .classed('line-hover-to', true)
                             .each(function(z){
                                 this.parentNode.appendChild(this);
@@ -230,7 +230,7 @@ var MigrationSlopeGraph = (function(){
                     .on('mouseout', function(d){
                         chart.classed('filtered', false);
                         chart.classed('filtered-to', false);
-                        d3.selectAll('.line-to-' + d.key.replace(' ','-'))
+                        d3.selectAll('.line-to-' + d.key.replace(/ /g,'-'))
                             .classed('line-hover-to', false);
                         chart.selectAll('rect.from-slice').remove();
                     });
@@ -319,7 +319,7 @@ var MigrationSlopeGraph = (function(){
                 .data(lineData)
                 .enter().append('polygon')
                     .attr('class', (d) => {
-                        return 'stateMigrationLine line-from-' + d.fromState.replace(' ','-') + ' line-to-' + d.toState.replace(' ','-');
+                        return 'stateMigrationLine line-from-' + d.fromState.replace(/ /g,'-') + ' line-to-' + d.toState.replace(/ /g,'-');
                     })
                     .attr('points', (d) => {
                         var toState = toStateFromBuckets[d.toState].buckets[d.fromState];
