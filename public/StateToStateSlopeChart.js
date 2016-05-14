@@ -322,10 +322,10 @@ var MigrationSlopeGraph = (function(){
             leftAxisGroup.insert('rect', '.tick')
                 .attr('width', barWidth/1.5)
                 .attr('height', state.innerHeight)
-                .attr('transform', 'translate(' + (-leftAxisGroup.node().getBoundingClientRect().width/2) + ',0)')
+                .attr('transform', 'translate(' + (-leftAxisGroup.node().getBoundingClientRect().width/2) + ',' + state.margin.top +')')
                 ;
 
-            leftAxisGroup.attr('transform', 'translate(' + (state.margin.left + barWidth - barWidth/5) + ',' + state.margin.top + ')')
+            leftAxisGroup.attr('transform', 'translate(' + (state.margin.left + barWidth - barWidth/5) + ',0)')
 
             var rightAxisGroup = svg.append('g')
                 .classed('y-axis', true)
@@ -334,10 +334,10 @@ var MigrationSlopeGraph = (function(){
             rightAxisGroup.insert('rect', '.tick')
                 .attr('width', barWidth/1.5)
                 .attr('height', state.innerHeight)
-                .attr('transform', 'translate(' + (-rightAxisGroup.node().getBoundingClientRect().width/2) + ',0)')
+                .attr('transform', 'translate(' + (-rightAxisGroup.node().getBoundingClientRect().width/2) + ',' + state.margin.top + ')')
                 ;
 
-            rightAxisGroup.attr('transform', 'translate(' + (state.margin.left + state.innerWidth - barWidth/5) + ',' + state.margin.top + ')')
+            rightAxisGroup.attr('transform', 'translate(' + (state.margin.left + state.innerWidth - barWidth/5) + ',0)')
         }
     }
     return MigrationSlopeGraph;
