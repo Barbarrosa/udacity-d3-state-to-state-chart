@@ -77,8 +77,20 @@
             .chart .state-to-group .state-to-text-hover {
                 opacity: 0;
             }
-            .chart .state-from-group:hover .state-from-text-hover,
-            .chart .state-to-group:hover .state-to-text-hover {
+            .chart .state-from-group .state-count,
+            .chart .state-to-group .state-count {
+                opacity: 0;
+            }
+            .chart .state-group .state-to-from-count {
+                fill: #1f77b4;
+            }
+            .chart .state-group .state-from-to-count {
+                fill: #d62728;
+            }
+            .chart .state-group .state-count.state-count-active,
+            .chart .state-group:hover .state-count,
+            .chart .state-group:hover .state-from-text-hover,
+            .chart .state-group:hover .state-to-text-hover {
                 opacity: 1;
                 font-weight: bold;
                 font-family: 'Exo 2', Helvetica, sans-serif;

@@ -69,6 +69,7 @@ var MigrationSlopeGraph = (function(){
             var state = stateMap.get(this);
             state.created = true;
 
+            var niceFormat = d3.format('.2s');
             var barWidth = state.innerWidth/8;
 
             var svg = d3.select(state.svg)
@@ -149,6 +150,7 @@ var MigrationSlopeGraph = (function(){
                 .data(fromStates)
                 .enter().append('g')
                     .classed('state-from-group', true)
+                    .attr('class', (d) => 'state-group state-from-group state-from-group-' + d.key.replace(/ /g, '-'))
                     .on('mouseover', function(d){
                         chart.classed('filtered', true);
                         chart.classed('filtered-from', true);
@@ -157,6 +159,9 @@ var MigrationSlopeGraph = (function(){
                             .each(function(z){
                                 this.parentNode.appendChild(this);
                                 var toState = toStateFromBuckets[z.toState].buckets[z.fromState];
+                                chart.selectAll('.state-to-group-' + z.toState.replace(/ /g, '-') + ' .state-to-from-count')
+                                    .text('+' + niceFormat(z.length))
+                                    .classed('state-count-active', true);
                                 chart.append('rect')
                                     .classed('to-slice', true)
                                     .attr('x', state.margin.left + state.innerWidth - barWidth)
@@ -164,6 +169,8 @@ var MigrationSlopeGraph = (function(){
                                     .attr('height', heightScale(toState.length))
                                     .attr('width', barWidth);
                             });
+                        d3.select(this).select('.state-count')
+                            .style('font-size', 16);
                     })
                     .on('mouseout', function(d){
                         chart.classed('filtered', false);
@@ -171,6 +178,11 @@ var MigrationSlopeGraph = (function(){
                         d3.selectAll('.line-from-' + d.key.replace(/ /g,'-'))
                             .classed('line-hover-from', false);
                         chart.selectAll('rect.to-slice').remove();
+                        chart.selectAll('.state-to-from-count')
+                            .text('')
+                            .classed('state-count-active', false);
+                        d3.select(this).select('.state-count')
+                            .style('font-size', (d) => Math.min(16, heightScale(d.values)/1.5));
                     });
 
             fromGroup.append('rect')
@@ -197,6 +209,27 @@ var MigrationSlopeGraph = (function(){
                 .attr('y', (d) => y(d.totalBefore))
                 .attr('dy',(d) => heightScale(d.values)/1.5);
 
+            fromGroup.append('text')
+                .classed('state-count', true)
+                .classed('state-from-count', true)
+                .style('font-size', (d) => Math.min(16, heightScale(d.values)/1.5))
+                .text((d) => niceFormat(d.values))
+                .attr('x', (d) => state.margin.left)
+                .attr('y', (d) => y(d.totalBefore))
+                .attr('text-anchor', 'end')
+                .attr('dx', -5)
+                .attr('dy', '1em');
+
+            fromGroup.append('text')
+                .classed('state-count', true)
+                .classed('state-from-to-count', true)
+                .style('font-size', (d) => Math.min(16, heightScale(d.values)/1.5))
+                .attr('x', (d) => state.margin.left)
+                .attr('y', (d) => y(d.totalBefore))
+                .attr('text-anchor', 'end')
+                .attr('dx', -5)
+                .attr('dy', '1em');
+
             fromGroup.append('rect')
                 .classed('state-bar', true)
                 .classed('state-from', true)
@@ -210,7 +243,7 @@ var MigrationSlopeGraph = (function(){
                 .data(toStates)
                 .enter()
                     .append('g')
-                    .classed('state-to-group', true)
+                    .attr('class', (d) => 'state-group state-to-group state-to-group-' + d.key.replace(/ /g, '-'))
                     .on('mouseover', function(d){
                         chart.classed('filtered', true);
                         chart.classed('filtered-to', true);
@@ -218,6 +251,9 @@ var MigrationSlopeGraph = (function(){
                             .classed('line-hover-to', true)
                             .each(function(z){
                                 this.parentNode.appendChild(this);
+                                chart.selectAll('.state-from-group-' + z.fromState.replace(/ /g, '-') + ' .state-from-to-count')
+                                    .text('-' + niceFormat(z.length))
+                                    .classed('state-count-active', true);
                                 chart.append('rect')
                                     .classed('from-slice', true)
                                     .attr('x', state.margin.left)
@@ -225,6 +261,8 @@ var MigrationSlopeGraph = (function(){
                                     .attr('height', heightScale(z.length))
                                     .attr('width', barWidth);
                             });
+                        d3.select(this).select('.state-count')
+                            .style('font-size', 16)
                     })
                     .on('mouseout', function(d){
                         chart.classed('filtered', false);
@@ -232,6 +270,11 @@ var MigrationSlopeGraph = (function(){
                         d3.selectAll('.line-to-' + d.key.replace(/ /g,'-'))
                             .classed('line-hover-to', false);
                         chart.selectAll('rect.from-slice').remove();
+                        chart.selectAll('.state-from-to-count')
+                            .text('')
+                            .classed('state-count-active', false);
+                        d3.select(this).select('.state-count')
+                            .style('font-size', (d) => Math.min(16, heightScale(d.values)/1.5))
                     });
 
             toGroup.append('rect')
@@ -257,6 +300,27 @@ var MigrationSlopeGraph = (function(){
                 .attr('x', (d) => state.margin.left + state.innerWidth)
                 .attr('y', (d) => y(d.totalBefore))
                 .attr('dy',(d) => heightScale(d.values)/1.5);
+
+            toGroup.append('text')
+                .classed('state-count', true)
+                .classed('state-to-count', true)
+                .style('font-size', (d) => Math.min(16, heightScale(d.values)/1.5))
+                .text((d) => niceFormat(d.values))
+                .attr('text-anchor', 'end')
+                .attr('x', (d) => state.width)
+                .attr('y', (d) => y(d.totalBefore))
+                .attr('dx', -5)
+                .attr('dy', '1em');
+
+            toGroup.append('text')
+                .classed('state-count', true)
+                .classed('state-to-from-count', true)
+                .style('font-size', (d) => Math.min(16, heightScale(d.values)/1.5))
+                .attr('text-anchor', 'end')
+                .attr('x', (d) => state.width)
+                .attr('y', (d) => y(d.totalBefore))
+                .attr('dx', -5)
+                .attr('dy', '1em');
 
             toGroup.append('rect')
                 .classed('state-bar', true)
@@ -347,7 +411,6 @@ var MigrationSlopeGraph = (function(){
                 .domain([migrateMax,0])
                 .range([state.margin.top,state.margin.top + state.innerHeight]);
 
-            var niceFormat = d3.format('.2s');
             var yAxis = d3.svg.axis()
                 .scale(yFlipped)
                 .orient('left')
@@ -399,9 +462,9 @@ d3.csv('State_to_State_Migrations_Table_2011.csv', function(d){
         height:965,
         margin: {
             top: 105,
-            right: 200,
+            right: 250,
             bottom: 5,
-            left: 200
+            left: 250
         },
         data: data
     });
