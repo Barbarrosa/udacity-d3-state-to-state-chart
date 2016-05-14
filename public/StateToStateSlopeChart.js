@@ -70,7 +70,7 @@ var MigrationSlopeGraph = (function(){
             state.created = true;
 
             var niceFormat = d3.format('.2s');
-            var barWidth = state.innerWidth/8;
+            var barWidth = state.innerWidth/16;
 
             var svg = d3.select(state.svg)
                 .attr('width', state.width)
@@ -407,41 +407,6 @@ var MigrationSlopeGraph = (function(){
                         return points.map((p) => p.join(',')).join(' ');
                     });
 
-            var yFlipped = d3.scale.linear()
-                .domain([migrateMax,0])
-                .range([state.margin.top,state.margin.top + state.innerHeight]);
-
-            var yAxis = d3.svg.axis()
-                .scale(yFlipped)
-                .orient('left')
-                .ticks(15)
-                .tickSubdivide(1)
-                .tickSize(0, 6, 0)
-                .tickFormat(niceFormat);
-
-            var leftAxisGroup = svg.append('g')
-                .classed('y-axis', true)
-                .call(yAxis);
-
-            leftAxisGroup.insert('rect', '.tick')
-                .attr('width', '2.5em')
-                .attr('height', state.innerHeight)
-                .attr('transform', 'translate(' + (-leftAxisGroup.node().getBoundingClientRect().width/2) + ',' + state.margin.top +')')
-                ;
-
-            leftAxisGroup.attr('transform', 'translate(' + (state.margin.left + barWidth/2 + leftAxisGroup.node().getBoundingClientRect().width/2) + ',0)')
-
-            var rightAxisGroup = svg.append('g')
-                .classed('y-axis', true)
-                .call(yAxis);
-
-            rightAxisGroup.insert('rect', '.tick')
-                .attr('width', '2.5em')
-                .attr('height', state.innerHeight)
-                .attr('transform', 'translate(' + (-rightAxisGroup.node().getBoundingClientRect().width/2) + ',' + state.margin.top + ')')
-                ;
-
-            rightAxisGroup.attr('transform', 'translate(' + (state.width - (state.margin.right + barWidth/2) + rightAxisGroup.node().getBoundingClientRect().width/2) + ',0)')
         }
     }
     return MigrationSlopeGraph;
