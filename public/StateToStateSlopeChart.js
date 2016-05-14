@@ -17,11 +17,9 @@ var MigrationSlopeGraph = (function(){
             var state = {};
             state.svg = config.svg;
             state.data = config.data;
-            state.label = config.label || 'Label not set';
+            state.title = config.title || 'Label not set';
             state.leftLabel = config.leftLabel || 'Label not set';
             state.rightLabel = config.rightLabel || 'Label not set';
-            state.increaseColor = config.increaseColor || '#77C';
-            state.decreaseColor = config.decreaseColor || '#C77';
             state.width = config.width || 650;
             state.height = config.height || 650;
             state.margin = config.margin || {
@@ -33,15 +31,49 @@ var MigrationSlopeGraph = (function(){
             state.innerWidth = state.width - state.margin.left - state.margin.right;
             state.innerHeight = state.height - state.margin.top - state.margin.bottom;
             state.partition = config.partition || 100;
+            state.created = false;
+            state.matchingWidth = false;
+            state.config = config;
             stateMap.set(this, state);
+        }
+        matchWidthToParent(matchWidth) {
+            var state = stateMap.get(this);
+            var wasMatchingWidth = state.matchingWidth;
+            state.matchingWidth = matchWidth;
+            if(matchWidth) {
+                var newWidth = state.svg.parentElement.clientWidth;
+                if(state.width !== newWidth) {
+                    var oldWidth = state.width;
+                    state.width = Math.min(
+                        Math.max(
+                            state.svg.parentElement.clientWidth,
+                            state.config.minWidth || 0
+                        ),
+                        state.config.maxWidth || state.svg.parentElement.clientWidth
+                    );
+                    state.innerWidth = state.width - (state.margin.right + state.margin.left);
+                    if(state.created) {
+                        d3.select(state.svg).html('');
+                        this.createGraph();
+                    }
+                }
+            } else if(wasMatchingWidth) {
+                state.width = state.config.width;
+                if(state.created) {
+                    d3.select(state.svg).html('');
+                    this.createGraph();
+                }
+            }
         }
         createGraph() {
             var state = stateMap.get(this);
+            state.created = true;
 
             var barWidth = state.innerWidth/8;
 
-            var svg = d3.select(state.svg);
-            svg.attr('width', state.width).attr('height', state.height);
+            var svg = d3.select(state.svg)
+                .attr('width', state.width)
+                .attr('height', state.height);
 
             var chart = svg.append('g')
                 .classed('slope-chart', true)
@@ -49,16 +81,26 @@ var MigrationSlopeGraph = (function(){
                 .attr('height', state.innerHeight);
 
             svg.append('text')
-                .classed('column-title', true)
-                .text('Outbound')
-                .attr('x', 0)
-                .attr('y', '1em');
+                .classed('chart-title', true)
+                .text(state.title)
+                .attr('text-anchor', 'middle')
+                .attr('transform', 'translate(' + state.width/2 + ',0)')
+                .attr('dy', '1em');
 
             svg.append('text')
                 .classed('column-title', true)
-                .text('Inbound')
-                .attr('x', state.margin.left + state.innerWidth - barWidth/2)
-                .attr('y', '1em');
+                .text(state.leftLabel)
+                .attr('text-anchor', 'start')
+                .attr('transform', 'translate(0,' + state.margin.top + ')')
+                .attr('dy', '-0.2em');
+
+            svg.append('text')
+                .classed('column-title', true)
+                .text(state.rightLabel)
+                .attr('text-anchor', 'end')
+                .attr('transform', 'translate(' + state.width + ',' + state.margin.top + ')')
+                .attr('dx', '-1em')
+                .attr('dy', '-0.2em');
 
             var fromStates = d3.nest()
                 .key((d) => d.Previous)
@@ -320,24 +362,24 @@ var MigrationSlopeGraph = (function(){
                 .call(yAxis);
 
             leftAxisGroup.insert('rect', '.tick')
-                .attr('width', barWidth/1.5)
+                .attr('width', '2.5em')
                 .attr('height', state.innerHeight)
                 .attr('transform', 'translate(' + (-leftAxisGroup.node().getBoundingClientRect().width/2) + ',' + state.margin.top +')')
                 ;
 
-            leftAxisGroup.attr('transform', 'translate(' + (state.margin.left + barWidth - barWidth/5) + ',0)')
+            leftAxisGroup.attr('transform', 'translate(' + (state.margin.left + barWidth/2 + leftAxisGroup.node().getBoundingClientRect().width/2) + ',0)')
 
             var rightAxisGroup = svg.append('g')
                 .classed('y-axis', true)
                 .call(yAxis);
 
             rightAxisGroup.insert('rect', '.tick')
-                .attr('width', barWidth/1.5)
+                .attr('width', '2.5em')
                 .attr('height', state.innerHeight)
                 .attr('transform', 'translate(' + (-rightAxisGroup.node().getBoundingClientRect().width/2) + ',' + state.margin.top + ')')
                 ;
 
-            rightAxisGroup.attr('transform', 'translate(' + (state.margin.left + state.innerWidth - barWidth/5) + ',0)')
+            rightAxisGroup.attr('transform', 'translate(' + (state.width - (state.margin.right + barWidth/2) + rightAxisGroup.node().getBoundingClientRect().width/2) + ',0)')
         }
     }
     return MigrationSlopeGraph;
@@ -350,15 +392,32 @@ d3.csv('State_to_State_Migrations_Table_2011.csv', function(d){
 }, function(data) {
     var slopeGraph = new MigrationSlopeGraph({
         svg: document.getElementById('mainChart'),
-        height:900,
-        width: 900,
+        title: 'U.S. State-to-State Migration Estimates, 2011',
+        rightLabel: 'Inbound',
+        leftLabel: 'Outbound',
+        maxWidth: 1500,
+        minWidth: 900,
+        height:965,
         margin: {
-            top: 55,
+            top: 105,
             right: 200,
             bottom: 5,
             left: 200
         },
         data: data
     });
+
+    // Manual debounce
+    var matchWidthTimeout = null;
+    var matchWidthCb = function(){
+        if(matchWidthTimeout) clearTimeout(matchWidthTimeout);
+        matchWidthTimeout = setTimeout(function(){
+            slopeGraph.matchWidthToParent(true);
+        }, 250);
+    };
+
+    window.addEventListener('resize', matchWidthCb);
+
+    slopeGraph.matchWidthToParent(true);
     slopeGraph.createGraph();
 });
