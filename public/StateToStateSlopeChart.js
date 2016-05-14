@@ -99,7 +99,6 @@ var MigrationSlopeGraph = (function(){
                 .text(state.rightLabel)
                 .attr('text-anchor', 'end')
                 .attr('transform', 'translate(' + state.width + ',' + state.margin.top + ')')
-                .attr('dx', '-1em')
                 .attr('dy', '-0.2em');
 
             var fromStates = d3.nest()
